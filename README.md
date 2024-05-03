@@ -1,5 +1,5 @@
-**f1.sh** - see next f1 race location & date
+**f1.sh** - Displays the location and date of the next Formula 1 race.
 
-**time-panel.sh** - stack two clocks with simple format
+**time-panel.sh** - Stacks two digital clocks, each showing the time in a simple format.
 
-**weather-date.sh** - simple weather in text format "62F Clouds"
+**weather-date.sh** - Outputs the current weather as a simple text string, including temperature in Fahrenheit and conditions (e.g., "62F Clouds").

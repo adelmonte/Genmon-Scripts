@@ -7,7 +7,4 @@ pt_time=$(date +"%H:%M")
 turkey_time=$(TZ="Europe/Istanbul" date +"%H:%M")
 
 # Print the times on top of each other
-echo -e " $pt_time PT"
-#echo -e " $pt_time PT\n $turkey_time TR"
-
-#echo -e "$turkey_time TR"
+echo -e " $pt_time PT\n $turkey_time TR"

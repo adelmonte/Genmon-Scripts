@@ -3,7 +3,7 @@
 CITY="Spokane"
 API_KEY="433a4d1ac86863ecd165a890ece92fbc"
 
- API URL to fetch weather data
+ #API URL to fetch weather data
 API_URL="http://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${API_KEY}&units=imperial"
 
 sleep 2

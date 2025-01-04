@@ -15,10 +15,16 @@ readonly ENERGY_DESIGN=$(awk '{$1 = $1 / 1000000; print $1}' /sys/class/power_su
 readonly ENERGY=$(awk '{$1 = $1 / 1000000; print $1}' /sys/class/power_supply/BAT*/energy_now)
 readonly VOLTAGE=$(awk '{$1 = $1 / 1000000; print $1}' /sys/class/power_supply/BAT*/voltage_now)
 readonly RATE=$(awk '{$1 = $1 / 1000000; print $1}' /sys/class/power_supply/BAT*/power_now)
-readonly BATTERY=$(awk '{print $1}' /sys/class/power_supply/BAT*/capacity)
 readonly TEMPERATURE=$(acpi -t | awk '{print $4}')
 readonly TIME_UNTIL=$(acpi | awk '{print $5}')
 readonly CHARGING_SYMBOL="󱐋 "
+readonly BATTERY=$(
+    if [[ $(cat /sys/class/power_supply/BAT*/status) == "Not charging" ]]; then
+        echo "100"
+    else
+        awk '{print $1}' /sys/class/power_supply/BAT*/capacity
+    fi
+)
 
 
 get_color() {
@@ -64,7 +70,7 @@ get_color() {
 }
 
 if hash xfce4-power-manager-settings &> /dev/null; then
-  INFO+="<txtclick>xfce4-power-manager-settings</txtclick>"
+  INFO+="<txtclick>/home/user/Documents/Scripts/backlight_slider.py</txtclick>"
 fi
 
 INFO+="<txt>"

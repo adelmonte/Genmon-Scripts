@@ -1,14 +1,18 @@
 #!/bin/bash
-GENMON_ID=4
+GENMON_ID=11
+LAST_REFRESH=0
+COOLDOWN=1  # minimum seconds between refreshes
 
 refresh_genmon() {
-    xfce4-panel --plugin-event=genmon-$GENMON_ID:refresh:bool:true
+    local now=$(date +%s)
+    if (( now - LAST_REFRESH >= COOLDOWN )); then
+        xfce4-panel --plugin-event=genmon-$GENMON_ID:refresh:bool:true
+        LAST_REFRESH=$now
+    fi
 }
 
-# Initial refresh when script starts
 refresh_genmon
 
-# Monitor both metadata changes and dbus name changes
 dbus-monitor --profile "type='signal',sender='org.mpris.MediaPlayer2.spotify'" \
 "type='signal',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged'" \
 "type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged',arg0='org.mpris.MediaPlayer2.spotify'" |

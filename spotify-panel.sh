@@ -1,68 +1,44 @@
 #!/usr/bin/env bash
-# Dependencies: bash>=3.2, coreutils, file, spotify, procps-ng, wmctrl, xdotool
-
-# Makes the script more portable
-readonly DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Optional icon to display before the text
-# Insert the absolute path of the icon
-# Recommended size is 24x24 px
-#readonly ICON="${DIR}/icons/music/spotify.png" 
+# Dependencies: bash>=3.2, coreutils, spotify, procps-ng, wmctrl
 
 if pidof spotify &> /dev/null; then
-  # Spotify song's info
-  readonly ARTIST=$(bash "${DIR}/spotify.sh" artist | sed 's/&/&#38;/g')
-  readonly TITLE=$(bash "${DIR}/spotify.sh" title | sed 's/&/&#38;/g')
-  readonly ALBUM=$(bash "${DIR}/spotify.sh" album | sed 's/&/&#38;/g')
-  readonly WINDOW_ID=$(wmctrl -l | grep "${ARTIST_TITLE}" | awk '{print $1}')
-  ARTIST_TITLE=$(echo "${ARTIST} - ${TITLE}")
-
-  # Proper length handling
-  readonly MAX_CHARS=25
-  readonly STRING_LENGTH="${#ARTIST_TITLE}"
-  readonly CHARS_TO_REMOVE=$(( STRING_LENGTH - MAX_CHARS ))
-  [ "${#ARTIST_TITLE}" -gt "${MAX_CHARS}" ] \
-    && ARTIST_TITLE="${ARTIST_TITLE:0:-CHARS_TO_REMOVE} …"
-
-  # Panel
-  if [[ $(file -b "${ICON}") =~ PNG|SVG ]]; then
-    INFO="<img>${ICON}</img>"
-    INFO+="<txt>"
-    INFO+="  ${ARTIST_TITLE}  "
-    INFO+="</txt>"
-  else
-    INFO="<txt>"
-    INFO+="  ${ARTIST_TITLE}  "
-    INFO+="</txt><txtclick>wmctrl -x -a "Spotify"</txtclick>"
-  fi
-
-#INFO+="<txtclick>bash wmctrl -x -a "Spotify"</txtclick>"
-
-  # Tooltip
-  MORE_INFO="<tool>"
-  MORE_INFO+="Artist ....: ${ARTIST}\n"
-  MORE_INFO+="Album ..: ${ALBUM}\n"
-  MORE_INFO+="Title ......: ${TITLE}"
-  MORE_INFO+="</tool>"
+    # Get all metadata in one call
+    METADATA=$(dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify \
+        /org/mpris/MediaPlayer2 \
+        org.freedesktop.DBus.Properties.Get \
+        string:'org.mpris.MediaPlayer2.Player' string:'Metadata' 2>/dev/null)
+    
+    readonly ARTIST=$(echo "$METADATA" | awk '/artist/{getline; getline; gsub(/^[^"]*"|"[^"]*$/, ""); print; exit}' | sed 's/&/\&amp;/g')
+    readonly TITLE=$(echo "$METADATA" | awk '/title/{getline; gsub(/^[^"]*"|"[^"]*$/, ""); print; exit}' | sed 's/&/\&amp;/g')
+    readonly ALBUM=$(echo "$METADATA" | awk '/album/{getline; gsub(/^[^"]*"|"[^"]*$/, ""); print; exit}' | sed 's/&/\&amp;/g')
+    
+    ARTIST_TITLE="${ARTIST} - ${TITLE}"
+    # Proper length handling
+    readonly MAX_CHARS=30
+    readonly STRING_LENGTH="${#ARTIST_TITLE}"
+    readonly CHARS_TO_REMOVE=$(( STRING_LENGTH - MAX_CHARS ))
+    [ "${#ARTIST_TITLE}" -gt "${MAX_CHARS}" ] \
+        && ARTIST_TITLE="${ARTIST_TITLE:0:-CHARS_TO_REMOVE}…"
+    
+    # Panel - Green Spotify icon with text
+  # INFO="<txt><span foreground='#1DB954' size='11pt'>   </span> ${ARTIST_TITLE} </txt>"
+    INFO="<txt><span foreground='#FFFFFF' size='11pt'>   </span> ${ARTIST_TITLE} </txt>"
+    INFO+="<txtclick>wmctrl -x -a \"Spotify\"</txtclick>"
+    
+    # Tooltip
+    MORE_INFO="<tool>"
+    MORE_INFO+="Artist: ${ARTIST}\n"
+    MORE_INFO+="Album: ${ALBUM}\n"
+    MORE_INFO+="Title: ${TITLE}"
+    MORE_INFO+="</tool>"
 else
-  # Panel
-  if [[ $(file -b "${ICON}") =~ PNG|SVG ]]; then
-    INFO="<img>${ICON}</img>"
-    INFO+="<txt>"
-    INFO+="</txt>"
-  else
-    INFO="<txt>"
-    INFO+="</txt>"
-  fi
-
-  # Tooltip
-  MORE_INFO="<tool>"
-  MORE_INFO+="Spotify is not running"
-  MORE_INFO+="</tool>"
+    # Panel - Green Spotify icon when not playing
+#    INFO="<txt><span foreground='#1DB954' size='11pt'>   </span> </txt>"
+#    INFO+="<txtclick>spotify</txtclick>"
+    
+    # Tooltip
+    MORE_INFO="<tool>Spotify is not running\nClick to launch</tool>"
 fi
 
-# Panel Print
 echo -e "${INFO}"
-
-# Tooltip Print
 echo -e "${MORE_INFO}"
